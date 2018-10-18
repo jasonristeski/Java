@@ -1,0 +1,118 @@
+
+options 
+{
+  JAVA_UNICODE_ESCAPE = true;
+  STATIC = false;
+}
+
+PARSER_BEGIN(SimpleCalculator)
+
+import java.util.*;
+
+  public class SimpleCalculator 
+  {
+  	public static void main( String[] args )
+  	{
+  		try
+  		{
+  			SimpleCalculator calc = new SimpleCalculator( System.in );
+  			calc.Lines();
+        }
+	    catch (ParseException e)
+        {
+          System.out.println( "Syntax Error : \n"+ e.toString() );
+        }
+  	}
+  }
+
+PARSER_END(SimpleCalculator)
+
+TOKEN :
+{
+  < NUMBER : (["0"-"9"])+ >
+}
+
+SKIP :
+{ " " | "\t" | "\r" }
+
+void Lines() :
+{ 
+  IVisitor visitor = new ExpressionVisitor();
+  ArrayList<Expression> es; 
+}
+{ 
+	( es=ExpressionList() "\n" 
+	 { System.out.print( "-> " + es.get( 0 ).accept( visitor ) ); 
+	   for ( int i = 1; i < es.size(); i++ )
+	   {
+	     System.out.print( ", " +  es.get( i ).accept( visitor ) );
+	   }
+	   System.out.println( "" );
+	 } )* 
+}
+
+ArrayList<Expression> ExpressionList() :
+{
+	Expression e;
+	ArrayList<Expression> result = new ArrayList<Expression>();
+}
+{
+	e = Expression() 
+	{ result.add( e ); }
+	("," e=Expression() { result.add( e ); })*
+	{ 
+		return result;
+	}
+}
+
+Expression Expression() : 
+{ 
+  Expression value; 
+  Expression right;
+}
+{ 
+	value=Term() 
+	(  
+	  "+" right=Term()
+	  { value = new PlusExpression( value, right ); } 
+    | 
+      "-" right=Term() 
+      { value = new MinusExpression( value, right ); } 
+    )* 
+  { return value; }
+}
+
+Expression Term() :
+{ 
+  Expression value; 
+  Expression right;
+} 
+{ 
+	value=Primary()  
+	(  
+	  "x" right=Primary()
+	  { value = new TimesExpression( value, right ); } 
+    | 
+      "/" right=Primary()
+      { value = new DivideExpression( value, right ); } 
+    )* 
+  { return value; }
+}
+
+Expression Primary() :
+{ 
+  Expression value; 
+  Token t;
+}
+{ 
+	(  
+	  "(" value=Expression() ")" 
+	  { return value; } 
+    | 
+      t=<NUMBER>
+      { return new IntegerLiteral( t ); } 
+    | 
+      t="-" value=Primary()
+      { return new UnaryMinusExpression( t, value ); }
+    ) 
+}

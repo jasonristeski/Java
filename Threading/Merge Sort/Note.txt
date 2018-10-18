@@ -1,0 +1,2 @@
+Note: Not efficient, number of threads should be dependent on number of cores, rather than N size of array
+Creating a thread for recursive call is inefficient.  

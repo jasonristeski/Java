@@ -1,0 +1,199 @@
+
+options
+{
+	static = false;
+}
+
+PARSER_BEGIN(MiniJavaParser)
+
+import java.io.*;
+
+class MiniJavaParser
+{
+	public static void main(String[] Args)
+	{
+		try
+		{
+			new MiniJavaParser (new FileInputStream(Args[0])).CompilationUnit();
+			System.out.println("SUCCESS");
+		}
+		catch(ParseException e)
+		{
+			System.out.println("Syntax Error: \n"+e.toString());
+		}
+		catch(FileNotFoundException e)
+		{
+			System.out.println(e.toString());
+		}
+	}   
+}
+
+
+PARSER_END(MiniJavaParser)
+
+SKIP:
+{
+	" "
+  |
+	"\t"
+  |
+    "\n"
+  |
+    "\r"
+  |
+    "\r\n"
+  |
+    < "//" (~["\n"])* "\n" > 
+}
+
+
+
+void CompilationUnit() : {}
+{
+	Program()< EOF >
+}
+
+void Program() : {}
+{
+	MainClass() (ClassDecl())*
+}
+
+void MainClass(): {}
+{
+	"class" <IDENTIFIER>
+	"{" 
+		"public" "static" "void" "main" "(" "String" "[" "]" <IDENTIFIER> ")"
+		"{"	Statement() "}" 
+	"}"
+}
+
+void ClassDecl() : {}
+{
+	LOOKAHEAD(3)
+	"class" <IDENTIFIER> "{" (VarDecl())* (MethodDecl())* "}"
+	|
+	"class" <IDENTIFIER> "extends" <IDENTIFIER> "{" (VarDecl())* (MethodDecl())* "}"
+}
+
+void VarDecl() : {}
+{
+	Type() <IDENTIFIER> ";"
+}
+
+void MethodDecl() : {}
+{
+	"public" Type() < IDENTIFIER > "(" FormalList() ")"
+	 "{" 
+	    (LOOKAHEAD(2) VarDecl())*  (Statement())*
+	    "return" Exp() ";"
+	 "}"
+		 
+}
+
+void FormalList() : {}
+{
+	(Type() <IDENTIFIER> (FormalRest())*)?
+}
+
+void FormalRest() : {}
+{
+	"," Type() <IDENTIFIER>
+}
+
+void Type() : {}
+{
+	LOOKAHEAD(2) 
+	"int" "[" "]" 
+	|
+	"boolean"
+	|
+	"int"
+	|
+	<IDENTIFIER>
+}
+
+void Statement() : {}
+{
+	"{" (Statement())* "}"
+	|
+	"if" "(" Exp() ")" Statement() "else" Statement()
+	|
+	"while" "(" Exp() ")" Statement()
+	|
+	"System.out.println" "(" Exp() ")" ";"
+	|
+	LOOKAHEAD(2)
+	<IDENTIFIER> "=" Exp() ";"
+	|
+	<IDENTIFIER> "[" Exp() "]" "=" Exp() ";"
+}
+
+void Exp() : {}
+{
+	DashExp() (("&&"|"<")DashExp())*
+}
+
+void DashExp() : {}
+{
+	DotExp() (("+"|"-") DotExp())*
+}
+
+void DotExp() : {}
+{
+	ObjectExp() ("*" ObjectExp())*
+}
+
+void ObjectExp() : {}
+{
+	PrimaryExp() ("[" Exp() "]"| "." Selector())*
+}
+
+void Selector() : {}
+{
+	"length"
+	|
+	<IDENTIFIER> "(" ExpList() ")"
+}
+
+void PrimaryExp() : {}
+{
+	<INTEGER>
+	|
+	"true"
+	|
+	"false"
+	|
+	<IDENTIFIER> 
+	|
+	"this"
+	|
+	"new" NewValue()
+	|
+	"!" PrimaryExp()
+	|
+	"(" Exp() ")"
+}
+
+void NewValue() : {}
+{
+	"int" "[" Exp() "]"
+	|
+	<IDENTIFIER> "(" ")"
+}
+
+void ExpList() : {}
+{
+	(Exp() (ExpRest())*)?
+}
+
+void ExpRest() : {}
+{
+	"," Exp()
+}
+
+TOKEN:
+{
+	<INTEGER : (["0"-"9"])+>
+	|
+	<IDENTIFIER : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9","_"])*>
+}

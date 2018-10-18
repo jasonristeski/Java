@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Suntime</string>
+    <string name="add">Add New Location</string>
+    <string name="Name"> Enter Location Name:</string>
+    <string name="Lat">Enter Latitude:</string>
+    <string name="Long">Enter Longitude:</string>
+    <string name="GMT">Enter GMT:</string>
+
+    <string name="StartDate">Start Date:</string>
+    <string name="EndDate">End Date:</string>
+    <string name="generate">Generate</string>
+    <string name="Location">Location:</string>
+
+
+    <string name="share">Share</string>
+    <string name="clear">Clear</string>
+</resources>
